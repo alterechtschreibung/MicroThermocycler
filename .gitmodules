@@ -1,3 +1,6 @@
 [submodule "Arduino-Temperature-Control-Library"]
 	path = Arduino-Temperature-Control-Library
 	url = git@github.com:milesburton/Arduino-Temperature-Control-Library.git
+[submodule "OneWire"]
+	path = OneWire
+	url = https://github.com/nysander/OneWire
