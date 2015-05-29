@@ -1,12 +1,11 @@
-This project was initiated by Matthias Bock and Tobias Kuban
-(www.tobiaskuban.com). All rights reserved.
-You may not remove or alter this copyright notice. You may
-not use or modify this work without written consent of the
-authors. You may, however, use the files of this project
-under the
-CDDL COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL)Version 1.1
-as stated below in this file:
-COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL)Version 1.1
+You may not remove the name of the original authors in derivative works.
+Derivative works must link to the original work.
+You may use and modify the source code of this work
+if you comply with the terms and conditions of the
+
+CDDL COMMON DEVELOPMENT AND DISTRIBUTION LICENSE (CDDL)
+Version 1.1
+
 1. Definitions.
 1.1. “Contributor” means each individual or entity that creates or contributes to the creation of Modifications.
 1.2. “Contributor Version” means the combination of the Original Software, prior Modifications used by a Contributor (if any), and the Modifications made by that particular Contributor.
