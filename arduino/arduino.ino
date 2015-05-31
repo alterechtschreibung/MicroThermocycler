@@ -1,13 +1,45 @@
 #include <OneWire.h>
+#include <DallasTemperature.h>
+
+#define PIN_LED 13
+#define PIN_TEMP_DATA 12
+#define PIN_FET_IN1 4
+#define PIN_FET_IN2 5
+#define PIN_FET_IN3 6
+#define PIN_FET_IN4 7
+#define PIN_FET_EN_A 8
+#define PIN_FET_EN_B 9
 
 // DS18S20 Temperature chip i/o
-OneWire ds(10);  // on pin 10
+OneWire ds(PIN_TEMP_DATA);
 
-void setup(void) {
+// decode temperature values
+DallasTemperature sensors(&ds);
+
+void disable();
+
+void setup(void)
+{
     // put your setup code here, to run once:
-  pinMode(13, OUTPUT);
+  pinMode(PIN_LED, OUTPUT);
   delay(100);
-  digitalWrite(13, HIGH);
+  digitalWrite(PIN_LED, HIGH);
+  
+  pinMode(PIN_TEMP_DATA, INPUT);
+  
+  pinMode(PIN_FET_IN1, OUTPUT);
+  pinMode(PIN_FET_IN2, OUTPUT);
+  pinMode(PIN_FET_IN3, OUTPUT);
+  pinMode(PIN_FET_IN4, OUTPUT);
+  disable();
+
+  // enable by default
+  pinMode(PIN_FET_EN_A, OUTPUT);
+  pinMode(PIN_FET_EN_B, OUTPUT);
+  digitalWrite(PIN_FET_EN_A, HIGH);
+  digitalWrite(PIN_FET_EN_B, HIGH);
+  
+  sensors.begin();
   
   // 1wire
   // initialize inputs/outputs
@@ -15,73 +47,59 @@ void setup(void) {
   Serial.begin(9600);
 }
 
-void loop(void) {
-    // put your main code here, to run repeatedly:
-    delay(100);
-  digitalWrite(13, HIGH);
-    delay(10000);
-  digitalWrite(13, LOW);
-    delay(10000);
-    
-    //1 wire
-  byte i;
-  byte present = 0;
-  byte data[12];
-  byte addr[8];
+float getTemp()
+{
+  // read temperature
+  sensors.requestTemperatures();
+  float temp = sensors.getTempCByIndex(0);
 
-  ds.reset_search();
-  if ( !ds.search(addr)) {
-      Serial.print("No more addresses.\n");
-      ds.reset_search();
-      return;
-  }
-
-  Serial.print("R=");
-  for( i = 0; i < 8; i++) {
-    Serial.print(addr[i], HEX);
-    Serial.print(" ");
-  }
-
-  if ( OneWire::crc8( addr, 7) != addr[7]) {
-      Serial.print("CRC is not valid!\n");
-      return;
-  }
-
-  if ( addr[0] == 0x10) {
-      Serial.print("Device is a DS18S20 family device.\n");
-  }
-  else if ( addr[0] == 0x28) {
-      Serial.print("Device is a DS18B20 family device.\n");
-  }
-  else {
-      Serial.print("Device family is not recognized: 0x");
-      Serial.println(addr[0],HEX);
-      return;
-  }
-
-  ds.reset();
-  ds.select(addr);
-  ds.write(0x44,1);         // start conversion, with parasite power on at the end
-
-  delay(1000);     // maybe 750ms is enough, maybe not
-  // we might do a ds.depower() here, but the reset will take care of it.
-
-  present = ds.reset();
-  ds.select(addr);    
-  ds.write(0xBE);         // Read Scratchpad
-
-  Serial.print("P=");
-  Serial.print(present,HEX);
-  Serial.print(" ");
-  for ( i = 0; i < 9; i++) {           // we need 9 bytes
-    data[i] = ds.read();
-    Serial.print(data[i], HEX);
-    Serial.print(" ");
-  }
-  Serial.print(" CRC=");
-  Serial.print( OneWire::crc8( data, 8), HEX);
-  Serial.println();
+  // and output to serial port
+  Serial.print( temp );
+  Serial.print(" Grad Celsius\n");
+  
+  return temp;
 }
 
+void heat()
+{
+    analogWrite(PIN_FET_IN1, 128); // heating
+    analogWrite(PIN_FET_IN4, 128); // heating
+}
 
+void cool()
+{
+    analogWrite(PIN_FET_IN2, 128); // cooling
+    analogWrite(PIN_FET_IN3, 128); // cooling
+}
 
+void disable()
+{
+  digitalWrite(PIN_FET_IN1, LOW);
+  digitalWrite(PIN_FET_IN2, LOW);
+  digitalWrite(PIN_FET_IN3, LOW);
+  digitalWrite(PIN_FET_IN4, LOW);
+}
+
+void loop(void)
+{
+  // phase 1: melting, 95 degrees, 2min
+  // phase 2: primer annealing, 58-63 degrees, 2min
+  // phase 3: extension 72 degrees, 2min
+  // repeat
+
+  digitalWrite(PIN_LED, HIGH);
+
+  for (int i=0; i<4; i++)
+  {
+  analogWrite(PIN_FET_IN1, 100); // heating
+  analogWrite(PIN_FET_IN4, 100); // heating
+    delay(3000);
+    disable();
+    delay(500);
+    getTemp();    
+  }
+  
+  digitalWrite(PIN_LED, LOW);
+  disable();
+  delay(2000);
+}
